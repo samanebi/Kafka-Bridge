@@ -1,0 +1,30 @@
+# configs/config.yaml
+server:
+  http_port: "3000"
+
+database:
+  host: "localhost"
+  port: 5432
+  user: "postgres"
+  password: "postgres"
+  name: "kafka-bridge"
+  ssl_mode: "disable"
+
+kafka:
+  brokers:
+    - "localhost:9092"
+  topic: "events"
+  group_id: "kafka-bridge-consumer-group"
+
+app:
+  worker_count: 10
+  environment: "development"
+  max_retries: 3
+  retry_delay_ms: 1000
+  batch_size: 1000
+  commit_interval: 5000
+
+logging:
+  level: "info"
+  format: "console"
+  file_path: ""

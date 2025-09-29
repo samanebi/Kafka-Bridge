@@ -1,0 +1,34 @@
+
+FROM golang:1.24-alpine AS builder
+
+RUN apk add --no-cache git ca-certificates tzdata
+
+WORKDIR /app
+COPY go.mod ./
+RUN go mod download
+
+COPY . .
+
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags='-extldflags "-static"' -o /app/bin/consumer ./cmd/consumer
+
+FROM alpine:latest AS runtime
+
+RUN apk --no-cache add ca-certificates tzdata
+
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
+WORKDIR /app
+
+COPY --from=builder /app/bin/consumer ./
+COPY --from=builder /app/pkg/configs ./pkg/configs
+
+COPY --from=builder /app/pkg/configs/config.yaml ./pkg/configs/
+
+RUN chown -R appuser:appgroup /app
+
+USER appuser
+
+# HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+#    CMD pgrep -f consumer || exit 1
+
+CMD ["./consumer"]
